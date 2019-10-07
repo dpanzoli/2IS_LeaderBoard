@@ -1,0 +1,10 @@
+{
+	"name": "leaderboard",
+	"private": true,
+	"dependencies": {
+		"angular": "^1.7.8",
+		"jquery": "^3.4.1",
+		"ngstorage": "^0.3.11",
+		"semantic-ui-css": "^2.4.1"
+	}
+}

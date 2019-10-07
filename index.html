@@ -1,0 +1,126 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="node_modules/semantic-ui-css/semantic.min.css"/>
+    <script src="node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="node_modules/semantic-ui-css/semantic.min.js"></script>
+	<script src="node_modules/angular/angular.min.js"></script>
+	<script src="node_modules/ngstorage/ngStorage.min.js"></script>
+</head>
+
+<body ng-app="app" ng-controller="ctrl">
+
+<div class="ui text container">
+	
+	<h1>Leaderboard</h1>
+	
+	<table>
+	<thead>
+		<tr>
+		<th>#Rank</th>
+		<th>Team</th>
+		<th>Items</th>
+		<th>Time</th>
+		<th>
+			<input type="checkbox" ng-model="godMode">
+			<label>Edit mode</label>
+		</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr ng-repeat="(i, rec) in $storage.data" ng-class="rec.highlight">
+			<td>{{rec.rank}}</td>
+			<td>{{rec.name}}</td>
+			<td>{{rec.symbols}}</td>
+			<td>{{rec.time}} s</td>
+			<td>
+				<span ng-show="godMode">
+					<a href="#" ng-click="delete(i)">delete</a>
+				</span>
+			</td>
+		</tr>
+	</tbody>
+	</table>
+	
+	<h2>Register new participation</h2>
+	<form ng-submit="newRecord()">
+		  <div>
+			<label>Team name</label>
+			<input type="text" name="teamName" placeholder="Team name" ng-model='name' required>
+		  </div>
+		  <div>
+			<label>Items</label>
+			<input type="text" placeholder="Items collected" ng-model='nbSymbols' required>
+		  </div>
+  		  <div>
+			<label>Time (in mm:ss)</label>
+			<input type="text" placeholder="mm:ss" ng-model='time' required pattern="^[0-9]+:[0|1|2|3|4|5][0-9]">
+		 </div>
+		<input type="submit" value="Submit">
+	</form>
+		
+      
+</div>
+
+</body>
+<script>		
+
+	var app = angular.module('app', ['ngStorage']);
+	
+	app.controller('ctrl', function($scope, $localStorage, $sessionStorage) {
+	
+		//Database is stored in browser local storage
+		$scope.$storage = $localStorage;
+	
+		//Add new record
+		$scope.newRecord = function(d) {
+			let tabTime = $scope.time.split(':');
+			let time = parseInt(tabTime[0])*60+parseInt(tabTime[1]);
+			$scope.$storage.data.push({ 
+				name: $scope.name,
+				symbols: $scope.nbSymbols,
+				time: time
+			});
+			$scope.reorder();
+			$scope.close();
+			$scope.name=''; $scope.nbSymbols=''; $scope.time='';
+		}
+		
+		$scope.reorder = function() {
+			$scope.$storage.data.sort(function(a, b) {
+				let f = parseInt(b.symbols)-parseInt(a.symbols);
+				if (f!=0) return f;
+				return parseInt(a.time)-parseInt(b.time);
+			});
+			//Identify tie ranks while reordering
+			let r = 0;
+			for (i=0; i<$scope.$storage.data.length; i++) {
+				if ((i == 0) 
+					|| ($scope.$storage.data[i-1].symbols != $scope.$storage.data[i].symbols)
+					|| ($scope.$storage.data[i-1].time != $scope.$storage.data[i].time))
+					r = r + 1;
+				$scope.$storage.data[i].rank = r;
+			} 
+		}
+		
+		$scope.delete = function(i) {
+			$scope.$storage.data.splice(i,1);
+			$scope.reorder();
+		}
+		
+		//Populate database if empty (first time launched)
+		if ($scope.$storage.data == undefined) 
+			$scope.$storage.data = [
+				{ name: "Average Joe's ", symbols: 15, time: 299},
+				{ name: "London Silly Nannies ", symbols: 12, time: 260},
+				{ name: "Miami Sharks", symbols: 12, time: 306},
+				{ name: "Springfield Nuclear Plant Softball Team", symbols: 11, time: 441},
+				{ name: "The Gotham Rogues", symbols: 20, time: 316},
+				{ name: "Toon Squad ", symbols: 8, time: 244}
+			];
+		$scope.reorder();
+	});
+
+</script>
+</html>
